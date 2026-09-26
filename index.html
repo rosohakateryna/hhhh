@@ -1,1 +1,1429 @@
+<!DOCTYPE html>
+<html lang="uk" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aroma Craft | Спешелті Кав'ярня та Ростерія</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        coffee: {
+                            50: '#faf6f0',
+                            100: '#f4ece1',
+                            200: '#e7d6c2',
+                            300: '#d7bc9e',
+                            400: '#c39d78',
+                            500: '#b08157',
+                            600: '#9b6844',
+                            700: '#7e5037',
+                            800: '#674130',
+                            900: '#54362a',
+                            950: '#2d1a13',
+                        },
+                        amber: {
+                            gold: '#d4af37',
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['Playfair Display', 'serif'],
+                        body: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Custom Style Overrides -->
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #faf6f0;
+            color: #2d1a13;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f4ece1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #b08157;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7e5037;
+        }
+        .bg-coffee-pattern {
+            background-color: #2d1a13;
+            background-image: radial-gradient(#674130 0.75px, transparent 0.75px);
+            background-size: 16px 16px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .glass-panel-dark {
+            background: rgba(45, 26, 19, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body x-data="coffeeApp()" x-init="initApp()" class="antialiased selection:bg-coffee-500 selection:text-white">
+
+    <script>
+        function coffeeApp() {
+            return {
+                // Navigation & State
+                isMobileMenuOpen: false,
+                isCartOpen: false,
+                isReservationOpen: false,
+                isCustomizerOpen: false,
+                isCheckoutOpen: false,
+                isOrderSuccessOpen: false,
+                isQuizOpen: false,
+                activeCategory: 'all',
+                searchQuery: '',
+                toastMessage: '',
+                showToast: false,
+
+                // Current time check for open/closed status
+                isOpenNow: true,
+
+                // Customization item modal temporary storage
+                selectedItemForCustomization: null,
+                customOptions: {
+                    size: 'Стандартний (300 мл)',
+                    milk: 'Коров\'яче класичне',
+                    syrup: 'Без сиропу',
+                    extraShot: false,
+                    sugar: 'Без цукру',
+                    notes: ''
+                },
+
+                // Quiz state
+                quizStep: 1,
+                quizAnswers: {
+                    type: '',
+                    flavor: '',
+                    strength: ''
+                },
+                quizResult: null,
+
+                // Reservation form
+                reservation: {
+                    name: '',
+                    phone: '',
+                    date: new Date().toISOString().split('T')[0],
+                    time: '12:00',
+                    guests: 2,
+                    zone: 'Основна зала',
+                    notes: ''
+                },
+                reservationConfirmed: false,
+                bookingReference: '',
+
+                // Checkout form
+                checkout: {
+                    type: 'pickup', // pickup | delivery
+                    name: '',
+                    phone: '',
+                    address: '',
+                    payment: 'card', // card | applepay | cash
+                    time: 'ASAP'
+                },
+
+                // Cart Data
+                cart: [],
+
+                // Menu items dataset
+                menuItems: [
+                    {
+                        id: 1,
+                        name: 'Еспресо Спешелті',
+                        category: 'espresso',
+                        price: 75,
+                        description: 'Подвійний еспресо зі свіжеобсмаженої зернової Ефіопії Їргачефф. Ноти бергамоту та стиглого персика.',
+                        image: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Без молока', 'Ягідні ноти', '100% Арабіка'],
+                        calories: '5 ккал'
+                    },
+                    {
+                        id: 2,
+                        name: 'Флет Вайт (Flat White)',
+                        category: 'espresso',
+                        price: 105,
+                        description: 'Насичений подвійний еспресо з шовковистою дрібнодисперсною молочною піною.',
+                        image: 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Класика', 'Насичений смак'],
+                        calories: '120 ккал'
+                    },
+                    {
+                        id: 3,
+                        name: 'Солона Карамель Лате',
+                        category: 'specialty',
+                        price: 125,
+                        description: 'Фірмовий еспресо з ніжним збитим молоком та авторським соусом із домашньої солоної карамелі.',
+                        image: 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Солодкий', 'Бестселер'],
+                        calories: '240 ккал'
+                    },
+                    {
+                        id: 4,
+                        name: 'Капучино Oat Silk',
+                        category: 'espresso',
+                        price: 115,
+                        description: 'Оксамитовий капучино на преміальному вівсяному молоці з легким горіхово-злаковим посмаком.',
+                        image: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=600&q=80',
+                        popular: false,
+                        tags: ['Рослинне молоко', 'Веган'],
+                        calories: '110 ккал'
+                    },
+                    {
+                        id: 5,
+                        name: 'Лавандовий Раф',
+                        category: 'specialty',
+                        price: 135,
+                        description: 'Еспресо, збитий з гарячими вершками та крафтовим натуральним цукром, настояним на квітах лаванди.',
+                        image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Авторський', 'Ніжний'],
+                        calories: '280 ккал'
+                    },
+                    {
+                        id: 6,
+                        name: 'V60 Альтернатива (Кенія)',
+                        category: 'alternative',
+                        price: 120,
+                        description: 'Пуровер заварювання. Чистий, прозорий смак із яскравою кислинкою червоної порічки та смородини.',
+                        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
+                        popular: false,
+                        tags: ['Фі his-taste', 'Фруктовий'],
+                        calories: '4 ккал'
+                    },
+                    {
+                        id: 7,
+                        name: 'Бамбл Кава (Bumble Coffee)',
+                        category: 'cold',
+                        price: 130,
+                        description: 'Освіжаючий мікс зі свіжовичавленого апельсинового соку, карамельного сиропу та подвійного еспресо зі льодом.',
+                        image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Холодний', 'Цитрус'],
+                        calories: '150 ккал'
+                    },
+                    {
+                        id: 8,
+                        name: 'Матча Лате Церемоніал',
+                        category: 'specialty',
+                        price: 140,
+                        description: 'Японський органічний зелений чай Матча найвищого ґатунку із затишним збитим кокосовим молоком.',
+                        image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=600&q=80',
+                        popular: false,
+                        tags: ['Суперфуд', 'без кави'],
+                        calories: '130 ккал'
+                    },
+                    {
+                        id: 9,
+                        name: 'Мигдалевий Французький Круасан',
+                        category: 'food',
+                        price: 95,
+                        description: 'Свіжовипечений листковий круасан з вершковим масляним кремом, мигдалевим франжипаном та пелюстками мигдалю.',
+                        image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Свіжа випічка', 'Солодке'],
+                        calories: '380 ккал'
+                    },
+                    {
+                        id: 10,
+                        name: 'Баскський Запечений Чизкейк',
+                        category: 'food',
+                        price: 150,
+                        description: 'Легендарний чизкейк із карамелізованою скоринкою та ніжною кремовою начинкою "Сан-Себастьян".',
+                        image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=600&q=80',
+                        popular: true,
+                        tags: ['Крафтовий десерт'],
+                        calories: '420 ккал'
+                    },
+                    {
+                        id: 11,
+                        name: 'Авокадо Тост з Брі та Пашот',
+                        category: 'food',
+                        price: 210,
+                        description: 'Хрумкий ремісничий хліб на заквасці, зріле авокадо, сир брі, яйце пашот, пластівці чилі та насіння гарбуза.',
+                        image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80',
+                        popular: false,
+                        tags: ['Сніданок', 'Ситно'],
+                        calories: '490 ккал'
+                    },
+                    {
+                        id: 12,
+                        name: 'Зерно Ethiopia Yirgacheffe (250g)',
+                        category: 'beans',
+                        price: 390,
+                        description: 'Свіже світле обсмаження для фільтру або турки. Ноти: стигла жасмин, бергамот, персик, мед.',
+                        image: 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?auto=format&fit=crop&w=600&q=80',
+                        popular: false,
+                        tags: ['Для дому', 'Зерно'],
+                        calories: '0 ккал'
+                    }
+                ],
+
+                // Reviews
+                reviews: [
+                    {
+                        id: 1,
+                        author: 'Олена Ковальчук',
+                        role: 'Постійна гостя',
+                        comment: 'Найкращий Флет Вайт у місті! Затишна атмосфера, завжди приємний персонал та неперевершений баскський чизкейк.',
+                        rating: 5,
+                        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80'
+                    },
+                    {
+                        id: 2,
+                        author: 'Максим Бойко',
+                        role: 'Кавовий ентузіаст',
+                        comment: 'Дуже вражений якістю спешелті зерна. Замовляю пачки додому та завжди беру V60 на Кенії. Справжні майстри своєї справи!',
+                        rating: 5,
+                        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80'
+                    },
+                    {
+                        id: 3,
+                        author: 'Анна & Дмитро',
+                        role: 'Фрілансери',
+                        comment: 'Ідеальне місце для роботи за ноутбуком вранці. Чудовий Wi-Fi, смачні авокадо-тости та кава на вівсяному молоці.',
+                        rating: 5,
+                        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'
+                    }
+                ],
+
+                // Methods
+                initApp() {
+                    const hour = new Date().getHours();
+                    // Open hours: 08:00 - 21:00
+                    this.isOpenNow = hour >= 8 && hour < 21;
+                },
+
+                triggerToast(msg) {
+                    this.toastMessage = msg;
+                    this.showToast = true;
+                    setTimeout(() => {
+                        this.showToast = false;
+                    }, 3500);
+                },
+
+                get filteredMenu() {
+                    return this.menuItems.filter(item => {
+                        const matchesCategory = this.activeCategory === 'all' || item.category === this.activeCategory;
+                        const matchesSearch = item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                                              item.description.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                    });
+                },
+
+                openCustomizer(item) {
+                    this.selectedItemForCustomization = item;
+                    // Reset custom defaults
+                    this.customOptions = {
+                        size: 'Стандартний (300 мл)',
+                        milk: 'Коров\'яче класичне',
+                        syrup: 'Без сиропу',
+                        extraShot: false,
+                        sugar: 'Без цукру',
+                        notes: ''
+                    };
+                    this.isCustomizerOpen = true;
+                },
+
+                calculateItemPrice(item) {
+                    if (!item) return 0;
+                    let extra = 0;
+                    if (this.customOptions.size.includes('450')) extra += 25;
+                    if (this.customOptions.milk.includes('Вівсяне') || this.customOptions.milk.includes('Мигдалеве') || this.customOptions.milk.includes('Кокосове')) extra += 20;
+                    if (this.customOptions.syrup !== 'Без сиропу') extra += 15;
+                    if (this.customOptions.extraShot) extra += 25;
+                    return item.price + extra;
+                },
+
+                addCustomizedToCart() {
+                    const item = this.selectedItemForCustomization;
+                    const finalPrice = this.calculateItemPrice(item);
+                    
+                    const cartItem = {
+                        cartId: Date.now() + Math.random(),
+                        id: item.id,
+                        name: item.name,
+                        basePrice: item.price,
+                        finalPrice: finalPrice,
+                        image: item.image,
+                        category: item.category,
+                        options: { ...this.customOptions },
+                        quantity: 1
+                    };
+
+                    this.cart.push(cartItem);
+                    this.isCustomizerOpen = false;
+                    this.triggerToast(`"${item.name}" додано до вашого кошика!`);
+                },
+
+                quickAddToCart(item) {
+                    // For food / beans without heavy beverage customizer
+                    const cartItem = {
+                        cartId: Date.now() + Math.random(),
+                        id: item.id,
+                        name: item.name,
+                        basePrice: item.price,
+                        finalPrice: item.price,
+                        image: item.image,
+                        category: item.category,
+                        options: null,
+                        quantity: 1
+                    };
+                    this.cart.push(cartItem);
+                    this.triggerToast(`"${item.name}" додано до вашого кошика!`);
+                },
+
+                removeFromCart(cartId) {
+                    this.cart = this.cart.filter(i => i.cartId !== cartId);
+                    this.triggerToast('Товар вилучено з кошика');
+                },
+
+                updateQuantity(cartId, delta) {
+                    const index = this.cart.findIndex(i => i.cartId === cartId);
+                    if (index !== -1) {
+                        this.cart[index].quantity += delta;
+                        if (this.cart[index].quantity <= 0) {
+                            this.cart.splice(index, 1);
+                        }
+                    }
+                },
+
+                get cartTotal() {
+                    return this.cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
+                },
+
+                get cartCount() {
+                    return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                },
+
+                submitReservation() {
+                    if (!this.reservation.name || !this.reservation.phone) {
+                        alert('Будь ласка, заповніть ваше ім\'я та номер телефону');
+                        return;
+                    }
+                    this.bookingReference = 'AC-' + Math.floor(100000 + Math.random() * 900000);
+                    this.reservationConfirmed = true;
+                },
+
+                resetReservation() {
+                    this.reservationConfirmed = false;
+                    this.isReservationOpen = false;
+                    this.reservation = {
+                        name: '',
+                        phone: '',
+                        date: new Date().toISOString().split('T')[0],
+                        time: '12:00',
+                        guests: 2,
+                        zone: 'Основна зала',
+                        notes: ''
+                    };
+                },
+
+                processCheckout() {
+                    if (!this.checkout.name || !this.checkout.phone) {
+                        alert('Заповніть обов\'язкові поля контактних даних');
+                        return;
+                    }
+                    this.isCheckoutOpen = false;
+                    this.isCartOpen = false;
+                    this.isOrderSuccessOpen = true;
+                    this.cart = [];
+                },
+
+                // Quiz Logic
+                selectQuizOption(step, value) {
+                    if (step === 1) this.quizAnswers.type = value;
+                    if (step === 2) this.quizAnswers.flavor = value;
+                    if (step === 3) {
+                        this.quizAnswers.strength = value;
+                        this.calculateQuizResult();
+                    }
+                    if (this.quizStep < 3) {
+                        this.quizStep++;
+                    }
+                },
+
+                calculateQuizResult() {
+                    const { type, flavor } = this.quizAnswers;
+                    let recommended = this.menuItems[2]; // Default salted caramel
+
+                    if (type === 'black' && flavor === 'fruity') {
+                        recommended = this.menuItems.find(i => i.id === 6) || this.menuItems[0];
+                    } else if (type === 'black') {
+                        recommended = this.menuItems.find(i => i.id === 1) || this.menuItems[0];
+                    } else if (type === 'cold') {
+                        recommended = this.menuItems.find(i => i.id === 7) || this.menuItems[6];
+                    } else if (type === 'milk' && flavor === 'sweet') {
+                        recommended = this.menuItems.find(i => i.id === 3) || this.menuItems[2];
+                    } else if (type === 'milk' && flavor === 'nutty') {
+                        recommended = this.menuItems.find(i => i.id === 4) || this.menuItems[3];
+                    } else {
+                        recommended = this.menuItems.find(i => i.id === 2) || this.menuItems[1];
+                    }
+
+                    this.quizResult = recommended;
+                    this.quizStep = 4; // Result step
+                },
+
+                resetQuiz() {
+                    this.quizStep = 1;
+                    this.quizAnswers = { type: '', flavor: '', strength: '' };
+                    this.quizResult = null;
+                }
+            }
+        }
+    </script>
+
+    <!-- Toast Notification Component -->
+    <div x-cloak x-show="showToast" 
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="translate-y-8 opacity-0"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition ease-in duration-200 transform"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-8 opacity-0"
+         class="fixed bottom-6 right-6 z-50 bg-coffee-950 text-coffee-50 px-6 py-4 rounded-xl shadow-2xl border border-coffee-700 flex items-center space-x-3 max-w-md">
+        <div class="w-8 h-8 rounded-full bg-amber-600/30 text-amber-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-mug-hot"></i>
+        </div>
+        <div class="text-sm font-medium" x-text="toastMessage"></div>
+    </div>
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-coffee-200 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-3 group">
+                    <div class="w-11 h-11 rounded-full bg-coffee-900 text-coffee-100 flex items-center justify-center shadow-lg group-hover:bg-coffee-800 transition">
+                        <i class="fa-solid fa-seedling text-lg text-amber-500"></i>
+                    </div>
+                    <div>
+                        <span class="font-heading text-2xl font-bold tracking-tight text-coffee-950 block leading-none">Aroma Craft</span>
+                        <span class="text-xs uppercase tracking-widest text-coffee-600 font-semibold">Specialty & Roastery</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-coffee-900">
+                    <a href="#menu" class="hover:text-coffee-600 transition">Меню</a>
+                    <a href="#quiz" class="hover:text-coffee-600 transition flex items-center gap-1.5 text-amber-700 font-semibold">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Підбір кави
+                    </a>
+                    <a href="#about" class="hover:text-coffee-600 transition">Про нас</a>
+                    <a href="#reviews" class="hover:text-coffee-600 transition">Відгуки</a>
+                    <a href="#contacts" class="hover:text-coffee-600 transition">Контакти</a>
+                </nav>
+
+                <!-- Actions Right (Status badge, Reserve CTA, Cart button) -->
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    
+                    <!-- Live Status Badge -->
+                    <div class="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+                         :class="isOpenNow ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300'">
+                        <span class="w-2 h-2 rounded-full animate-ping" :class="isOpenNow ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                        <span x-text="isOpenNow ? 'Відчинено (08:00–21:00)' : 'Зачинено зараз'"></span>
+                    </div>
+
+                    <!-- Book Table Button -->
+                    <button @click="isReservationOpen = true" 
+                            class="hidden sm:inline-flex items-center px-4 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold bg-coffee-100 text-coffee-900 border border-coffee-300 hover:bg-coffee-200 transition shadow-sm">
+                        <i class="fa-regular fa-calendar-check mr-2 text-coffee-700"></i> Столик
+                    </button>
+
+                    <!-- Shopping Cart Trigger Button -->
+                    <button @click="isCartOpen = true" 
+                            class="relative p-2.5 rounded-full bg-coffee-900 text-coffee-50 hover:bg-coffee-800 transition shadow-md flex items-center justify-center">
+                        <i class="fa-solid fa-bag-shopping text-base"></i>
+                        <span x-cloak x-show="cartCount > 0" 
+                              x-text="cartCount" 
+                              class="absolute -top-1.5 -right-1.5 bg-amber-500 text-coffee-950 font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center shadow">
+                        </span>
+                    </button>
+
+                    <!-- Mobile Menu Hamburger -->
+                    <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="md:hidden p-2 text-coffee-900 text-xl">
+                        <i x-show="!isMobileMenuOpen" class="fa-solid fa-bars"></i>
+                        <i x-cloak x-show="isMobileMenuOpen" class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div x-cloak x-show="isMobileMenuOpen" 
+             x-transition 
+             class="md:hidden border-t border-coffee-200 bg-coffee-50 px-4 pt-4 pb-6 space-y-3">
+            <a href="#menu" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-lg text-base font-semibold text-coffee-900 hover:bg-coffee-100">Меню</a>
+            <a href="#quiz" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-lg text-base font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100">
+                <i class="fa-solid fa-wand-magic-sparkles mr-2 text-amber-600"></i> Інтерактивний підбір кави
+            </a>
+            <a href="#about" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-lg text-base font-semibold text-coffee-900 hover:bg-coffee-100">Про нас</a>
+            <a href="#reviews" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-lg text-base font-semibold text-coffee-900 hover:bg-coffee-100">Відгуки</a>
+            <a href="#contacts" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-lg text-base font-semibold text-coffee-900 hover:bg-coffee-100">Контакти</a>
+            <div class="pt-2">
+                <button @click="isMobileMenuOpen = false; isReservationOpen = true" class="w-full py-3 rounded-xl bg-coffee-900 text-coffee-50 font-bold text-sm shadow">
+                    <i class="fa-regular fa-calendar-check mr-2"></i> Забронювати столик
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="relative overflow-hidden bg-coffee-pattern text-coffee-100 py-16 md:py-28">
+        <div class="absolute inset-0 opacity-20 bg-center bg-cover pointer-events-none" style="background-image: url('https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1800&q=80')"></div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-coffee-800/80 border border-coffee-600/50 text-xs text-amber-300 font-semibold uppercase tracking-wider backdrop-blur-sm">
+                        <i class="fa-solid fa-fire-flame-curved text-amber-400"></i>
+                        <span>Свіже обсмаження кожні 3 дні</span>
+                    </div>
+
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading tracking-tight text-amber-50 leading-tight">
+                        Мистецтво кави у кожній краплі
+                    </h1>
+
+                    <p class="text-base sm:text-lg text-coffee-200 font-light max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        Відбірні спешелті лоти з Ефіопії, Колумбії та Кенії. Авторські напої, реміснича випічка та затишна атмосфера у серці міста.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                        <a href="#menu" class="w-full sm:w-auto px-8 py-4 rounded-full bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-sm tracking-wide uppercase transition shadow-xl hover:shadow-2xl text-center transform hover:-translate-y-0.5">
+                            Переглянути меню
+                        </a>
+                        <button @click="isQuizOpen = true" class="w-full sm:w-auto px-8 py-4 rounded-full bg-coffee-800/80 hover:bg-coffee-700 text-coffee-100 border border-coffee-600 font-semibold text-sm transition text-center backdrop-blur-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                            Підібрати свій смак
+                        </button>
+                    </div>
+
+                    <!-- Quick Metrics -->
+                    <div class="grid grid-cols-3 gap-4 pt-8 border-t border-coffee-800/60 max-w-lg mx-auto lg:mx-0">
+                        <div>
+                            <span class="block text-2xl sm:text-3xl font-bold font-heading text-amber-400">100%</span>
+                            <span class="text-xs text-coffee-300 uppercase tracking-wider">Arabica Specialty</span>
+                        </div>
+                        <div>
+                            <span class="block text-2xl sm:text-3xl font-bold font-heading text-amber-400">15+</span>
+                            <span class="text-xs text-coffee-300 uppercase tracking-wider">Сортів зерна</span>
+                        </div>
+                        <div>
+                            <span class="block text-2xl sm:text-3xl font-bold font-heading text-amber-400">4.9★</span>
+                            <span class="text-xs text-coffee-300 uppercase tracking-wider">Оцінка відвідувачів</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Card / Featured Product Showcase -->
+                <div class="lg:col-span-5">
+                    <div class="relative mx-auto max-w-md lg:max-w-none">
+                        <div class="absolute -inset-1 rounded-3xl bg-gradient-to-r from-amber-500 to-coffee-600 opacity-30 blur-xl"></div>
+                        <div class="relative rounded-2xl bg-coffee-900 border border-coffee-700 p-6 shadow-2xl space-y-4">
+                            <div class="relative h-64 rounded-xl overflow-hidden group">
+                                <img src="https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=800&q=80" 
+                                     alt="Солона карамель лате" 
+                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                <div class="absolute top-3 left-3 bg-amber-500 text-coffee-950 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                    Хіт сезону
+                                </div>
+                            </div>
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-xl font-bold font-heading text-amber-100">Солона Карамель Лате</h3>
+                                    <p class="text-xs text-coffee-300 mt-1">Домашня карамель, еспресо, збите молоко</p>
+                                </div>
+                                <span class="text-xl font-bold font-heading text-amber-400">125 ₴</span>
+                            </div>
+                            <button @click="openCustomizer(menuItems[2])" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-xs uppercase tracking-wider transition shadow">
+                                <i class="fa-solid fa-plus mr-1.5"></i> Замовити з кастомізацією
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE QUIZ SECTION -->
+    <section id="quiz" class="py-16 bg-coffee-100 border-y border-coffee-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+            <div class="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-coffee-200 relative overflow-hidden">
+                <div class="text-center max-w-xl mx-auto mb-8">
+                    <span class="text-xs font-bold uppercase tracking-widest text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
+                        <i class="fa-solid fa-compass mr-1"></i> Кавовий сомельє
+                    </span>
+                    <h2 class="text-3xl font-bold font-heading text-coffee-950 mt-3">Не знаєте, що обрати?</h2>
+                    <p class="text-sm text-coffee-700 mt-2">Дайте відповідь на 3 простих запитання, і ми підберемо ідеальний напій для вашого настрою.</p>
+                </div>
+
+                <!-- Quiz Progress Bar -->
+                <div class="w-full bg-coffee-100 h-2 rounded-full mb-8 overflow-hidden">
+                    <div class="bg-amber-600 h-full transition-all duration-500" :style="`width: ${(quizStep / 3) * 100}%`"></div>
+                </div>
+
+                <!-- Quiz Steps -->
+                <div>
+                    <!-- Step 1: Base Type -->
+                    <div x-show="quizStep === 1" x-transition>
+                        <h3 class="text-lg font-bold text-coffee-900 text-center mb-6">1. Якому формату кави ви надаєте перевагу?</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <button @click="selectQuizOption(1, 'black')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center group">
+                                <i class="fa-solid fa-mug-hot text-3xl text-coffee-700 group-hover:text-amber-700 mb-3 block"></i>
+                                <span class="font-bold text-coffee-900 block">Чиста чорна кава</span>
+                                <span class="text-xs text-coffee-600">Еспресо, фільтр, V60</span>
+                            </button>
+                            <button @click="selectQuizOption(1, 'milk')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center group">
+                                <i class="fa-solid fa-glass-water-droplet text-3xl text-coffee-700 group-hover:text-amber-700 mb-3 block"></i>
+                                <span class="font-bold text-coffee-900 block">З ніжним молоком</span>
+                                <span class="text-xs text-coffee-600">Капучино, лате, флет вайт</span>
+                            </button>
+                            <button @click="selectQuizOption(1, 'cold')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center group">
+                                <i class="fa-solid fa-snowflake text-3xl text-coffee-700 group-hover:text-amber-700 mb-3 block"></i>
+                                <span class="font-bold text-coffee-900 block">Освіжаюча здорова кава</span>
+                                <span class="text-xs text-coffee-600">Бамбл, Колд Брю, Лід-лате</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Flavor Profile -->
+                    <div x-show="quizStep === 2" x-transition>
+                        <h3 class="text-lg font-bold text-coffee-900 text-center mb-6">2. Який смаковий відтінок вам найближчий?</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <button @click="selectQuizOption(2, 'fruity')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center group">
+                                <i class="fa-solid fa-lemon text-3xl text-amber-600 mb-3 block"></i>
+                                <span class="font-bold text-coffee-900 block">Фруктово-ягідна кислинка</span>
+                                <span class="text-xs text-coffee-600">Яскраві цитрусові та ягідні ноти</span>
+                            </button>
+                            <button @click="selectQuizOption(2, 'nutty')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center group">
+                                <i class="fa-solid fa-cookie text-3xl text-amber-700 mb-3 block"></i>
+                                <span class="font-bold text-coffee-900 block">Шоколадно-горіховий</span>
+                                <span class="text-xs text-coffee-600">Оксамитовий гіркий шоколад, фундук</span>
+                            </button>
+                            <button @click="selectQuizOption(2, 'sweet')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center group">
+                                <i class="fa-solid fa-ice-cream text-3xl text-rose-500 mb-3 block"></i>
+                                <span class="font-bold text-coffee-900 block">Солодкий десертний</span>
+                                <span class="text-xs text-coffee-600">Карамель, ваніль, лаванда</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Intensity -->
+                    <div x-show="quizStep === 3" x-transition>
+                        <h3 class="text-lg font-bold text-coffee-900 text-center mb-6">3. Рівень міцності напою?</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <button @click="selectQuizOption(3, 'light')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center font-bold text-coffee-900">
+                                М'який та мрійливий
+                            </button>
+                            <button @click="selectQuizOption(3, 'medium')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center font-bold text-coffee-900">
+                                Збалансований класичний
+                            </button>
+                            <button @click="selectQuizOption(3, 'strong')" class="p-6 rounded-2xl border-2 border-coffee-200 hover:border-amber-600 bg-coffee-50/50 hover:bg-amber-50 transition text-center font-bold text-coffee-900">
+                                Подвійний енергетичний заряд
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Result -->
+                    <div x-show="quizStep === 4" x-transition class="text-center space-y-6">
+                        <div class="inline-block p-3 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider">
+                            Ваш ідеальний мaтч знайдено!
+                        </div>
+                        <template x-if="quizResult">
+                            <div class="max-w-md mx-auto bg-coffee-50 border border-coffee-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-left">
+                                <img :src="quizResult.image" :alt="quizResult.name" class="w-24 h-24 rounded-xl object-cover shrink-0">
+                                <div>
+                                    <h4 class="text-xl font-bold font-heading text-coffee-950" x-text="quizResult.name"></h4>
+                                    <p class="text-xs text-coffee-600 mt-1" x-text="quizResult.description"></p>
+                                    <div class="mt-3 flex items-center justify-between">
+                                        <span class="text-lg font-bold text-amber-700" x-text="`${quizResult.price} ₴`"></span>
+                                        <button @click="quickAddToCart(quizResult)" class="px-4 py-2 rounded-lg bg-coffee-900 text-coffee-50 text-xs font-bold hover:bg-coffee-800 transition">
+                                            Замовити цей напій
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <div>
+                            <button @click="resetQuiz()" class="text-xs text-coffee-600 underline hover:text-coffee-900 font-medium">Пройти тест ще раз</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE MENU SECTION -->
+    <section id="menu" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Section Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+            <div>
+                <span class="text-xs uppercase tracking-widest text-amber-700 font-bold">Смакове розмаїття</span>
+                <h2 class="text-3xl sm:text-4xl font-bold font-heading text-coffee-950 mt-1">Крафтове Меню</h2>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-coffee-400 text-sm"></i>
+                <input type="text" 
+                       x-model="searchQuery" 
+                       placeholder="Пошук напою чи випічки..." 
+                       class="w-full pl-10 pr-4 py-2.5 rounded-full border border-coffee-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500 shadow-sm">
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex items-center space-x-2 overflow-x-auto pb-4 mb-8 scrollbar-none">
+            <button @click="activeCategory = 'all'" 
+                    :class="activeCategory === 'all' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                Усе меню
+            </button>
+            <button @click="activeCategory = 'espresso'" 
+                    :class="activeCategory === 'espresso' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                <i class="fa-solid fa-mug-saucer mr-1.5"></i> Еспресо Бар
+            </button>
+            <button @click="activeCategory = 'specialty'" 
+                    :class="activeCategory === 'specialty' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Фірмові напої
+            </button>
+            <button @click="activeCategory = 'alternative'" 
+                    :class="activeCategory === 'alternative' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                <i class="fa-solid fa-filter mr-1.5"></i> Альтернатива V60
+            </button>
+            <button @click="activeCategory = 'cold'" 
+                    :class="activeCategory === 'cold' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                <i class="fa-solid fa-cubes-stacked mr-1.5"></i> Холодні напої
+            </button>
+            <button @click="activeCategory = 'food'" 
+                    :class="activeCategory === 'food' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                <i class="fa-solid fa-croissant mr-1.5"></i> Випічка та Тости
+            </button>
+            <button @click="activeCategory = 'beans'" 
+                    :class="activeCategory === 'beans' ? 'bg-coffee-900 text-coffee-50' : 'bg-white text-coffee-800 hover:bg-coffee-100'"
+                    class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold transition whitespace-nowrap border border-coffee-200 shadow-sm">
+                <i class="fa-solid fa-seedling mr-1.5"></i> Зерно додому
+            </button>
+        </div>
+
+        <!-- Menu Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <template x-for="item in filteredMenu" :key="item.id">
+                <div class="bg-white rounded-2xl overflow-hidden border border-coffee-200 shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
+                    <div>
+                        <!-- Image & Tags -->
+                        <div class="relative h-52 overflow-hidden">
+                            <img :src="item.image" :alt="item.name" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <template x-if="item.popular">
+                                <span class="absolute top-3 left-3 bg-amber-500 text-coffee-950 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full shadow">
+                                    Хіт
+                                </span>
+                            </template>
+                            <span class="absolute bottom-3 right-3 bg-coffee-950/80 backdrop-blur-md text-coffee-100 text-xs px-2.5 py-1 rounded-md font-medium" x-text="item.calories"></span>
+                        </div>
+
+                        <!-- Card Info -->
+                        <div class="p-6">
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="text-lg font-bold font-heading text-coffee-950" x-text="item.name"></h3>
+                                <span class="text-lg font-bold font-heading text-amber-700 whitespace-nowrap" x-text="`${item.price} ₴`"></span>
+                            </div>
+
+                            <p class="text-xs text-coffee-600 mt-2 line-clamp-2 leading-relaxed" x-text="item.description"></p>
+
+                            <!-- Tags -->
+                            <div class="flex flex-wrap gap-1.5 mt-4">
+                                <template x-for="tag in item.tags" :key="tag">
+                                    <span class="bg-coffee-100 text-coffee-800 text-[11px] px-2.5 py-0.5 rounded-full font-medium" x-text="tag"></span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="px-6 pb-6 pt-2 border-t border-coffee-100 flex items-center justify-between">
+                        <template x-if="item.category === 'food' || item.category === 'beans'">
+                            <button @click="quickAddToCart(item)" 
+                                    class="w-full py-2.5 rounded-xl bg-coffee-900 hover:bg-coffee-800 text-coffee-50 font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-cart-plus"></i>
+                                <span>Додати у кошик</span>
+                            </button>
+                        </template>
+
+                        <template x-if="item.category !== 'food' && item.category !== 'beans'">
+                            <button @click="openCustomizer(item)" 
+                                    class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span>Налаштувати та додати</span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Empty state -->
+        <div x-cloak x-show="filteredMenu.length === 0" class="text-center py-16">
+            <i class="fa-solid fa-mug-hot text-4xl text-coffee-300 mb-3 block"></i>
+            <p class="text-base font-semibold text-coffee-700">За вашим запитом нічого не знайдено</p>
+            <p class="text-xs text-coffee-500 mt-1">Спробуйте змінити пошуковий словосполучення або фільтр.</p>
+        </div>
+    </section>
+
+    <!-- ABOUT & ROASTERY SECTION -->
+    <section id="about" class="py-20 bg-coffee-950 text-coffee-100 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <div class="space-y-6">
+                    <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Наша Філософія</span>
+                    <h2 class="text-3xl sm:text-4xl font-bold font-heading text-amber-50 leading-tight">
+                        Від високогірної ферми до вашої чашки
+                    </h2>
+                    <p class="text-sm sm:text-base text-coffee-200 font-light leading-relaxed">
+                        Заснована у 2021 році, кав'ярня Aroma Craft була створена з єдиною метою: розкрити справжній багатогранний смак спешелті кави без компромісів.
+                    </p>
+                    <p class="text-sm sm:text-base text-coffee-200 font-light leading-relaxed">
+                        Ми напряму співпрацюємо з фермерами з Ефіопії, Гватемали та Колумбії. Обсмажуємо зерно на німецькому ростері Probat щотижня, дотримуючись мікро-профілів для підкреслення унікальних ягідних, квіткових та горіхових відтінків.
+                    </p>
+
+                    <!-- Feature List -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-leaf text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-coffee-50">100% Екологічно</h4>
+                                <p class="text-xs text-coffee-400">Біорозкладні стаканчики та локальне молоко</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-award text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-coffee-50">Сертифіковані бариста</h4>
+                                <p class="text-xs text-coffee-400">Чемпіони національних чемпіонатів SCA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Gallery Box -->
+                <div class="grid grid-cols-2 gap-4">
+                    <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80" alt="Roastery" class="rounded-2xl h-64 w-full object-cover shadow-lg">
+                    <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=600&q=80" alt="Latte art" class="rounded-2xl h-64 w-full object-cover shadow-lg mt-8">
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- REVIEWS SECTION -->
+    <section id="reviews" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-xl mx-auto mb-12">
+            <span class="text-xs uppercase tracking-widest text-amber-700 font-bold">Відгуки гостей</span>
+            <h2 class="text-3xl font-bold font-heading text-coffee-950 mt-1">Що про нас кажуть</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <template x-for="rev in reviews" :key="rev.id">
+                <div class="bg-white p-8 rounded-2xl border border-coffee-200 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <!-- Stars -->
+                        <div class="flex text-amber-500 text-sm mb-3">
+                            <template x-for="i in rev.rating">
+                                <i class="fa-solid fa-star"></i>
+                            </template>
+                        </div>
+                        <p class="text-xs text-coffee-700 italic leading-relaxed" x-text="`“${rev.comment}”`"></p>
+                    </div>
+
+                    <div class="flex items-center space-x-3 pt-4 border-t border-coffee-100">
+                        <img :src="rev.avatar" :alt="rev.author" class="w-10 h-10 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-bold text-xs text-coffee-950" x-text="rev.author"></h4>
+                            <span class="text-[11px] text-coffee-500" x-text="rev.role"></span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </section>
+
+    <!-- RESERVATION MODAL -->
+    <div x-cloak x-show="isReservationOpen" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-coffee-950/70 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-coffee-200 max-h-[90vh] overflow-y-auto">
+            <button @click="isReservationOpen = false" class="absolute top-6 right-6 text-coffee-400 hover:text-coffee-900 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Form View -->
+            <div x-show="!reservationConfirmed">
+                <div class="text-center mb-6">
+                    <span class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 inline-flex items-center justify-center text-xl mb-2">
+                        <i class="fa-regular fa-calendar-check"></i>
+                    </span>
+                    <h3 class="text-2xl font-bold font-heading text-coffee-950">Бронювання столика</h3>
+                    <p class="text-xs text-coffee-600 mt-1">Оберіть зручний час та зарезервуйте затишне місце</p>
+                </div>
+
+                <form @submit.prevent="submitReservation()" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Ваше ім'я *</label>
+                        <input type="text" x-model="reservation.name" required placeholder="Оксана" class="w-full px-4 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Номер телефону *</label>
+                        <input type="tel" x-model="reservation.phone" required placeholder="+380 67 000 0000" class="w-full px-4 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Дата</label>
+                            <input type="date" x-model="reservation.date" required class="w-full px-3 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Час</label>
+                            <select x-model="reservation.time" class="w-full px-3 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                                <option>08:30</option>
+                                <option>10:00</option>
+                                <option>12:00</option>
+                                <option>14:00</option>
+                                <option>16:00</option>
+                                <option>18:00</option>
+                                <option>19:30</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Кількість осіб</label>
+                            <select x-model="reservation.guests" class="w-full px-3 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                                <option value="1">1 особа</option>
+                                <option value="2">2 особи</option>
+                                <option value="3">3 особи</option>
+                                <option value="4">4 особи</option>
+                                <option value="5+">5+ осіб</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Зона посадки</label>
+                            <select x-model="reservation.zone" class="w-full px-3 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                                <option>Основна зала</option>
+                                <option>Біля вікна</option>
+                                <option>Літня тераса</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Особливі побажання</label>
+                        <textarea x-model="reservation.notes" rows="2" placeholder="Наприклад, потрібна дитячий стільчик..." class="w-full px-4 py-2 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-xs uppercase tracking-wider transition shadow-lg mt-2">
+                        Підтвердити бронювання
+                    </button>
+                </form>
+            </div>
+
+            <!-- Confirmation View -->
+            <div x-show="reservationConfirmed" class="text-center space-y-4 py-6">
+                <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 text-3xl flex items-center justify-center mx-auto">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="text-2xl font-bold font-heading text-coffee-950">Столик успішно заброньовано!</h3>
+                <p class="text-xs text-coffee-700">Ми чекаємо на вас у вказаний час. Код підтвердження:</p>
+                <div class="inline-block bg-coffee-100 text-coffee-900 font-mono font-bold text-lg px-6 py-2 rounded-xl border border-coffee-300" x-text="bookingReference"></div>
+                <div class="text-xs text-coffee-500 space-y-1 pt-2">
+                    <p><strong x-text="reservation.name"></strong>, <span x-text="`${reservation.guests} чол.`"></span></p>
+                    <p><span x-text="reservation.date"></span> о <span x-text="reservation.time"></span> (<span x-text="reservation.zone"></span>)</p>
+                </div>
+                <button @click="resetReservation()" class="w-full py-3 rounded-xl bg-coffee-900 text-coffee-50 font-bold text-xs uppercase tracking-wider hover:bg-coffee-800 transition">
+                    Чудово
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMIZER MODAL FOR BEVERAGES -->
+    <div x-cloak x-show="isCustomizerOpen" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-coffee-950/70 backdrop-blur-sm"
+         x-transition>
+        
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-coffee-200 max-h-[90vh] overflow-y-auto">
+            <button @click="isCustomizerOpen = false" class="absolute top-5 right-5 text-coffee-400 hover:text-coffee-900 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <template x-if="selectedItemForCustomization">
+                <div>
+                    <div class="flex items-center space-x-4 mb-6">
+                        <img :src="selectedItemForCustomization.image" :alt="selectedItemForCustomization.name" class="w-20 h-20 rounded-2xl object-cover shrink-0">
+                        <div>
+                            <h3 class="text-lg font-bold font-heading text-coffee-950" x-text="selectedItemForCustomization.name"></h3>
+                            <span class="text-sm font-bold text-amber-700" x-text="`Базова ціна: ${selectedItemForCustomization.price} ₴`"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-left">
+                        <!-- Size Option -->
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-2">Об'єм напою</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" 
+                                        @click="customOptions.size = 'Стандартний (300 мл)'" 
+                                        :class="customOptions.size.includes('300') ? 'border-amber-600 bg-amber-50 text-coffee-950 font-bold' : 'border-coffee-200 text-coffee-700'"
+                                        class="py-2.5 px-3 rounded-xl border text-xs text-center transition">
+                                    300 мл
+                                </button>
+                                <button type="button" 
+                                        @click="customOptions.size = 'Великий (450 мл)'" 
+                                        :class="customOptions.size.includes('450') ? 'border-amber-600 bg-amber-50 text-coffee-950 font-bold' : 'border-coffee-200 text-coffee-700'"
+                                        class="py-2.5 px-3 rounded-xl border text-xs text-center transition">
+                                    450 мл (+25 ₴)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Milk Choice -->
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-2">Основа (Молоко)</label>
+                            <select x-model="customOptions.milk" class="w-full px-3 py-2.5 rounded-xl border border-coffee-200 text-xs focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                                <option>Коров'яче класичне</option>
+                                <option>Безлактозне (+15 ₴)</option>
+                                <option>Вівсяне Oatly (+20 ₴)</option>
+                                <option>Мигдалеве (+20 ₴)</option>
+                                <option>Кокосове (+20 ₴)</option>
+                            </select>
+                        </div>
+
+                        <!-- Syrup Option -->
+                        <div>
+                            <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-2">Натуральний сироп (+15 ₴)</label>
+                            <select x-model="customOptions.syrup" class="w-full px-3 py-2.5 rounded-xl border border-coffee-200 text-xs focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                                <option>Без сиропу</option>
+                                <option>Домашня солона карамель</option>
+                                <option>Французька ваніль</option>
+                                <option>Лісовий горіх</option>
+                                <option>Лаванда</option>
+                            </select>
+                        </div>
+
+                        <!-- Extras -->
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-coffee-50 border border-coffee-200">
+                            <span class="text-xs font-semibold text-coffee-900">Додатковий шот еспресо (+25 ₴)</span>
+                            <input type="checkbox" x-model="customOptions.extraShot" class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
+                        </div>
+
+                        <!-- Total & Add Button -->
+                        <div class="pt-4 border-t border-coffee-200 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] text-coffee-500 block uppercase font-bold">Разом:</span>
+                                <span class="text-xl font-bold font-heading text-amber-700" x-text="`${calculateItemPrice(selectedItemForCustomization)} ₴`"></span>
+                            </div>
+                            <button @click="addCustomizedToCart()" class="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-xs uppercase tracking-wider transition shadow">
+                                Додати до кошика
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- SHOPPING CART DRAWER -->
+    <div x-cloak x-show="isCartOpen" class="fixed inset-0 z-50 overflow-hidden">
+        <div class="absolute inset-0 bg-coffee-950/60 backdrop-blur-sm transition-opacity" @click="isCartOpen = false"></div>
+
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+                
+                <!-- Drawer Header -->
+                <div class="p-6 border-b border-coffee-200 flex items-center justify-between bg-coffee-50">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-bag-shopping text-xl text-amber-700"></i>
+                        <h3 class="text-xl font-bold font-heading text-coffee-950">Ваш кошик</h3>
+                    </div>
+                    <button @click="isCartOpen = false" class="text-coffee-400 hover:text-coffee-900 text-xl">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                    <template x-if="cart.length === 0">
+                        <div class="text-center py-12 text-coffee-400">
+                            <i class="fa-solid fa-basket-shopping text-5xl mb-3 text-coffee-200 block"></i>
+                            <p class="text-sm font-semibold text-coffee-700">Ваш кошик поки що порожній</p>
+                            <p class="text-xs text-coffee-500 mt-1">Оберіть смачні напої чи випічку в меню.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="item in cart" :key="item.cartId">
+                        <div class="p-4 rounded-2xl bg-coffee-50/60 border border-coffee-200 flex items-start justify-between gap-3">
+                            <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-xl object-cover shrink-0">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-xs text-coffee-950" x-text="item.name"></h4>
+                                
+                                <template x-if="item.options">
+                                    <div class="text-[11px] text-coffee-600 mt-1 space-y-0.5">
+                                        <p x-text="item.options.size"></p>
+                                        <p x-text="item.options.milk"></p>
+                                        <p x-show="item.options.syrup !== 'Без сиропу'" x-text="`Сироп: ${item.options.syrup}`"></p>
+                                    </div>
+                                </template>
+
+                                <div class="flex items-center justify-between mt-3">
+                                    <div class="flex items-center space-x-2 border border-coffee-200 bg-white rounded-lg px-2 py-0.5 text-xs">
+                                        <button @click="updateQuantity(item.cartId, -1)" class="text-coffee-600 hover:text-coffee-950 font-bold px-1">-</button>
+                                        <span x-text="item.quantity" class="font-bold text-coffee-900 px-1"></span>
+                                        <button @click="updateQuantity(item.cartId, 1)" class="text-coffee-600 hover:text-coffee-950 font-bold px-1">+</button>
+                                    </div>
+
+                                    <span class="font-bold text-xs text-amber-700" x-text="`${item.finalPrice * item.quantity} ₴`"></span>
+                                </div>
+                            </div>
+
+                            <button @click="removeFromCart(item.cartId)" class="text-coffee-400 hover:text-rose-600 text-xs p-1">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer Summary & Checkout Button -->
+                <div x-show="cart.length > 0" class="p-6 border-t border-coffee-200 bg-coffee-50 space-y-4">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-coffee-600 font-medium">Сума замовлення:</span>
+                        <span class="text-xl font-bold font-heading text-coffee-950" x-text="`${cartTotal} ₴`"></span>
+                    </div>
+
+                    <button @click="isCheckoutOpen = true" class="w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-xs uppercase tracking-wider transition shadow-lg">
+                        Перейти до оформлення
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div x-cloak x-show="isCheckoutOpen" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-coffee-950/70 backdrop-blur-sm"
+         x-transition>
+        
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-coffee-200 max-h-[90vh] overflow-y-auto">
+            <button @click="isCheckoutOpen = false" class="absolute top-6 right-6 text-coffee-400 hover:text-coffee-900 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-2xl font-bold font-heading text-coffee-950 mb-4">Оформлення замовлення</h3>
+
+            <form @submit.prevent="processCheckout()" class="space-y-4 text-left">
+                <!-- Delivery Type Switcher -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-coffee-100 rounded-xl">
+                    <button type="button" 
+                            @click="checkout.type = 'pickup'" 
+                            :class="checkout.type === 'pickup' ? 'bg-white shadow text-coffee-950 font-bold' : 'text-coffee-700'"
+                            class="py-2 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-store mr-1"></i> Самовивіз
+                    </button>
+                    <button type="button" 
+                            @click="checkout.type = 'delivery'" 
+                            :class="checkout.type === 'delivery' ? 'bg-white shadow text-coffee-950 font-bold' : 'text-coffee-700'"
+                            class="py-2 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-truck-ram mr-1"></i> Доставка кур'єром
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Ваше ім'я *</label>
+                    <input type="text" x-model="checkout.name" required class="w-full px-4 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Номер телефону *</label>
+                    <input type="tel" x-model="checkout.phone" required placeholder="+380..." class="w-full px-4 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                </div>
+
+                <template x-if="checkout.type === 'delivery'">
+                    <div>
+                        <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Адреса доставки *</label>
+                        <input type="text" x-model="checkout.address" placeholder="вул. Хрещатик, 15, кв. 4" required class="w-full px-4 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                    </div>
+                </template>
+
+                <div>
+                    <label class="block text-xs font-bold text-coffee-800 uppercase tracking-wider mb-1">Спосіб оплати</label>
+                    <select x-model="checkout.payment" class="w-full px-4 py-2.5 rounded-xl border border-coffee-200 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500">
+                        <option value="card">Карткою онлайн (LiqPay / Apple Pay)</option>
+                        <option value="cash">Готівкою або карткою при отриманні</option>
+                    </select>
+                </div>
+
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 flex justify-between items-center">
+                    <span class="text-xs font-bold text-amber-900">До сплати:</span>
+                    <span class="text-xl font-bold font-heading text-amber-800" x-text="`${cartTotal} ₴`"></span>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-coffee-950 font-bold text-xs uppercase tracking-wider transition shadow-lg">
+                    Підтвердити замовлення
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ORDER SUCCESS MODAL -->
+    <div x-cloak x-show="isOrderSuccessOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-coffee-950/70 backdrop-blur-sm" x-transition>
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 text-center space-y-4 border border-coffee-200 shadow-2xl">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 text-3xl flex items-center justify-center mx-auto">
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <h3 class="text-2xl font-bold font-heading text-coffee-950">Замовлення прийнято!</h3>
+            <p class="text-xs text-coffee-700">Наш бариста вже готує ваші напої. Ми зателефонуємо або надішлемо сповіщення, коли все буде готово.</p>
+            <button @click="isOrderSuccessOpen = false" class="w-full py-3 rounded-xl bg-coffee-900 text-coffee-50 font-bold text-xs uppercase tracking-wider hover:bg-coffee-800 transition">
+                Чудово, дякую!
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTACTS & LOCATION SECTION -->
+    <section id="contacts" class="py-20 bg-coffee-100 border-t border-coffee-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <div class="space-y-6">
+                    <span class="text-xs uppercase tracking-widest text-amber-700 font-bold">Чекаємо у гості</span>
+                    <h2 class="text-3xl font-bold font-heading text-coffee-950">Завітайте до Aroma Craft</h2>
+                    
+                    <div class="space-y-4 text-sm text-coffee-800">
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-location-dot text-amber-700 mt-1 text-base"></i>
+                            <div>
+                                <strong>Адреса:</strong>
+                                <p class="text-coffee-600">м. Київ, вул. Ярославів Вал, 18</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-clock text-amber-700 mt-1 text-base"></i>
+                            <div>
+                                <strong>Години роботи:</strong>
+                                <p class="text-coffee-600">Пн - Пт: 08:00 – 21:00</p>
+                                <p class="text-coffee-600">Сб - Нд: 09:00 – 22:00</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-phone text-amber-700 mt-1 text-base"></i>
+                            <div>
+                                <strong>Телефон:</strong>
+                                <p class="text-coffee-600">+380 (44) 123-45-67</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex space-x-3">
+                        <a href="#" class="w-10 h-10 rounded-full bg-coffee-200 text-coffee-900 flex items-center justify-center hover:bg-amber-600 hover:text-white transition">
+                            <i class="fa-brands fa-instagram text-base"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-coffee-200 text-coffee-900 flex items-center justify-center hover:bg-amber-600 hover:text-white transition">
+                            <i class="fa-brands fa-facebook-f text-base"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-coffee-200 text-coffee-900 flex items-center justify-center hover:bg-amber-600 hover:text-white transition">
+                            <i class="fa-brands fa-telegram text-base"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Interactive Map Graphics Mockup -->
+                <div class="rounded-3xl overflow-hidden shadow-xl border border-coffee-200 relative h-80 bg-coffee-200 flex items-center justify-center text-center p-6" style="background-image: url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80'); background-size: cover;">
+                    <div class="absolute inset-0 bg-coffee-950/40"></div>
+                    <div class="relative bg-white/90 backdrop-blur-md p-6 rounded-2xl max-w-xs shadow-lg">
+                        <i class="fa-solid fa-mug-hot text-3xl text-amber-700 mb-2 block"></i>
+                        <h4 class="font-bold text-coffee-950 font-heading text-lg">Aroma Craft Roastery</h4>
+                        <p class="text-xs text-coffee-600 mt-1">вул. Ярославів Вал, 18</p>
+                        <a href="https://maps.google.com" target="_blank" class="inline-block mt-3 px-4 py-2 bg-coffee-900 text-coffee-50 text-xs font-bold rounded-lg hover:bg-coffee-800 transition">
+                            Прокласти маршрут
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-coffee-950 text-coffee-400 py-12 border-t border-coffee-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-6">
+            <div>
+                <span class="font-heading text-xl font-bold text-coffee-100">Aroma Craft</span>
+                <p class="text-xs mt-1">© 2026 Aroma Craft Roasters. Всі права захищено.</p>
+            </div>
+            <div class="flex space-x-6 text-xs">
+                <a href="#menu" class="hover:text-coffee-100 transition">Меню</a>
+                <a href="#about" class="hover:text-coffee-100 transition">Про нас</a>
+                <a href="#contacts" class="hover:text-coffee-100 transition">Контакти</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
